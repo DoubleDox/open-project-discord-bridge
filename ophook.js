@@ -157,7 +157,7 @@ exports.Init = (app) =>
                         notify += '<@' + config.users[id] + '>';
             }
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
-            let data = {};
+            let content = {};
             let str = header + '\n' + b.subject + '\n' + link + ' ' + notify;
             if (project.chat_id)
             {
@@ -169,7 +169,7 @@ exports.Init = (app) =>
                 content.content = str;
                 content.embeds = [ message ];
             }
-            await axios.post(project.webhook, data);
+            await axios.post(project.webhook, content);
         }
 
         res.status(200).send('ok');
