@@ -157,7 +157,19 @@ exports.Init = (app) =>
                         notify += '<@' + config.users[id] + '>';
             }
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
-            await axios.post(project.webhook, { content : header + '\n' + b.subject + '\n' + link + ' ' + notify , embeds : [ message ] });
+            let data = {};
+            let str = header + '\n' + b.subject + '\n' + link + ' ' + notify;
+            if (project.chat_id)
+            {
+                content.chat_id = project.chat_id;
+                content.text = str;
+            }
+            else
+            {
+                content.content = str;
+                content.embeds = [ message ];
+            }
+            await axios.post(project.webhook, data);
         }
 
         res.status(200).send('ok');
