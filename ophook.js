@@ -163,6 +163,8 @@ exports.Init = (app) =>
             {
                 content.chat_id = project.chat_id;
                 content.text = str;
+                if (project.topic)
+                    content.reply_to_message_id = project.topic
             }
             else
             {
