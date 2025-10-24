@@ -68,6 +68,10 @@ exports.Init = (app) =>
             console.log('Project with id ' + p_id + " not configured");
             return;
         }
+
+        let target = null;
+        if (project.webhook.indexOf('discord') >= 0) target = 'discord';
+        if (project.webhook.indexOf('telegram') >= 0) target = 'telegram';
         let status = b._links?.status?.title;
         console.log('Received ' + req.body.action + ' for ' + b.id + ' status: ' + status);
         let st = b._links?.status?.href;
@@ -80,6 +84,17 @@ exports.Init = (app) =>
         let ass = b._links?.assignee?.href;
         if (ass != null && ass.indexOf('/') >= 0)
             ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
+
+        function UserLink(u) {
+            if (!config.users[u])
+            {
+                if (typeof (config.users[u] == 'string'))
+                    return '<@' + config.users[u] + '>';
+                if (!target && !config.users[u][target])
+                    return '<@' + config.users[u][target] + '>';
+            }
+            return 'OP_USER_' + u;
+        }
 
         let fields = [];
         let notify = '';
@@ -97,8 +112,8 @@ exports.Init = (app) =>
             fields.push( { name : 'Assignee', value : (cache[b.id].assignee_title??'none') + ' -> ' + assignee });
             cache[b.id].assignee = ass;
             cache[b.id].assignee_title = assignee;
-            if (config.users[ass] != null && !closed)
-                notify += '<@' + config.users[ass] +'>';
+            if (config.users[ass] && !closed)
+                notify += UserLink(ass);
         }
         else if (fields.length > 0)
             fields.push( { name : 'Assignee', value : assignee });
@@ -140,21 +155,21 @@ exports.Init = (app) =>
 
                 if (project.testers != null)
                     for (let id of project.testers)
-                        notify += '<@' + config.users[id] + '>';
+                        notify += UserLink(id);
             }
             if (st == config.op_status_need_review)
             {
                 header = '**Задача №' + b.id + ' готова к ревью**';
                 if (project.reviewers != null)    
                     for (let id of project.reviewers)
-                        notify += '<@' + config.users[id] + '>';
+                        notify += UserLink(id);
             }
             if (st == config.op_status_need_prereview)
             {
                 header = '**Задача №' + b.id + ' требует преревью**';
                 if (project.prereviewers != null)
                     for (let id of project.prereviewers)
-                        notify += '<@' + config.users[id] + '>';
+                        notify += UserLink(id);
             }
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
             let content = {};
