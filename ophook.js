@@ -173,6 +173,8 @@ exports.Init = (app) =>
             }
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
             let content = {};
+            if (target == 'telegram')
+                content.parse_mode = 'html';
             let str = header + '\n' + b.subject + '\n' + link + ' ' + notify;
             if (project.chat_id)
             {
