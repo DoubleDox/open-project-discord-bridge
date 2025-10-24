@@ -89,9 +89,9 @@ exports.Init = (app) =>
             if (!config.users[u])
             {
                 if (typeof (config.users[u] == 'string'))
-                    return '<@' + config.users[u] + '>';
+                    return (target == 'discord' ? '<' : '') + '@' + config.users[u] + (target == 'discord' ? '>' : '');
                 if (!target && !config.users[u][target])
-                    return '<@' + config.users[u][target] + '>';
+                    return (target == 'discord' ? '<' : '') + '@' + config.users[u][target] + (target == 'discord' ? '>' : '');
             }
             return 'OP_USER_' + u;
         }
