@@ -88,9 +88,9 @@ exports.Init = (app) =>
         function UserLink(u) {
             if (config.users[u])
             {
-                if (typeof (config.users[u] == 'string'))
+                if (typeof (config.users[u]) == 'string')
                     return (target == 'discord' ? '<' : '') + '@' + config.users[u] + (target == 'discord' ? '>' : '');
-                if (!target && !config.users[u][target])
+                if (target && config.users[u][target])
                     return (target == 'discord' ? '<' : '') + '@' + config.users[u][target] + (target == 'discord' ? '>' : '');
             }
             return 'OP_USER_' + u;
