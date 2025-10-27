@@ -86,7 +86,7 @@ exports.Init = (app) =>
             ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
 
         function UserLink(u) {
-            if (!config.users[u])
+            if (config.users[u])
             {
                 if (typeof (config.users[u] == 'string'))
                     return (target == 'discord' ? '<' : '') + '@' + config.users[u] + (target == 'discord' ? '>' : '');
