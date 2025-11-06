@@ -15,7 +15,7 @@ function HEXToVBColor(rrggbb, start) {
 var cache = {};
 
 async function logicInit(config)
-{//ssr-vragh-iz-budushchiegho
+{
     for (let project of config.projects)
     {
         let proj = project.op_id;
@@ -123,10 +123,10 @@ exports.Init = (app) =>
             let created = req.body.action == 'work_package:created';
             let message = { username :  'OP Bot', color: HEXToVBColor(b._embedded?.status?.color) }; // title = ''
             message.fields = fields;
-            let header = '**Обновление задачи №' + b.id + '**';
+            let header = '✨ ** Обновление задачи №' + b.id + '**';
             if (st == config.op_status_need_testing)
             {
-                header = '**Задача №' + b.id + ' готова к тестированию**';
+                header = '🧪 **Задача №' + b.id + ' готова к тестированию**';
 
                 try
                 {
@@ -146,7 +146,7 @@ exports.Init = (app) =>
                     }
                 
                     if (!hasRequest)
-                        header += ' !!! Отсутствует реквест !!!';
+                        header += ' ⚠️ Отсутствует реквест ⚠️';
                 }
                 catch (exc)
                 {
@@ -159,14 +159,14 @@ exports.Init = (app) =>
             }
             if (st == config.op_status_need_review)
             {
-                header = '**Задача №' + b.id + ' готова к ревью**';
+                header = '🔍 **Задача №' + b.id + ' готова к ревью**';
                 if (project.reviewers != null)    
                     for (let id of project.reviewers)
                         notify += UserLink(id);
             }
             if (st == config.op_status_need_prereview)
             {
-                header = '**Задача №' + b.id + ' требует преревью**';
+                header = '👁️ **Задача №' + b.id + ' требует преревью**';
                 if (project.prereviewers != null)
                     for (let id of project.prereviewers)
                         notify += UserLink(id);
@@ -174,7 +174,7 @@ exports.Init = (app) =>
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
             let content = {};
             if (target == 'telegram')
-                content.parse_mode = 'html';
+                content.parse_mode = 'MarkdownV2';
             let str = header + '\n' + b.subject + '\n' + link + ' ' + notify;
             if (project.chat_id)
             {
@@ -198,7 +198,8 @@ exports.Init = (app) =>
     {
         app.server.get('/ophook_admin_' + config.admin_key, async (req, res) => 
         {
-            
+            let f = require('fs').readFileSync('./admin.html', 'utf8');
+            res.send(f);
         });
     }
 }
