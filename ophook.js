@@ -1,4 +1,4 @@
-const version = '0.3.3';
+const version = '0.3.4';
 const axios = require('axios');
 
 //subject
@@ -96,6 +96,9 @@ exports.Init = (app) =>
             return 'OP_USER_' + u;
         }
 
+        const headerStart = target == 'discord' ? '**' : '<b>';
+        const headerEnd = target == 'discord' ? '**' : '</b>';
+
         let fields = [];
         let notify = '';
         if (cache[b.id] == null) cache[b.id] = {};
@@ -123,10 +126,10 @@ exports.Init = (app) =>
             let created = req.body.action == 'work_package:created';
             let message = { username :  'OP Bot', color: HEXToVBColor(b._embedded?.status?.color) }; // title = ''
             message.fields = fields;
-            let header = '✨ ** Обновление задачи №' + b.id + '**';
+            let header = '✨ ' + headerStart + 'Обновление задачи №' + b.id + headerEnd;
             if (st == config.op_status_need_testing)
             {
-                header = '🧪 **Задача №' + b.id + ' готова к тестированию**';
+                header = '🧪 ' + headerStart + 'Задача №' + b.id + ' готова к тестированию' + headerEnd;
 
                 try
                 {
@@ -159,17 +162,21 @@ exports.Init = (app) =>
             }
             if (st == config.op_status_need_review)
             {
-                header = '🔍 **Задача №' + b.id + ' готова к ревью**';
+                header = '🔍 ' + headerStart + 'Задача №' + b.id + ' готова к ревью' + headerEnd;
                 if (project.reviewers != null)    
                     for (let id of project.reviewers)
                         notify += UserLink(id);
             }
             if (st == config.op_status_need_prereview)
             {
-                header = '👁️ **Задача №' + b.id + ' требует преревью**';
+                header = '👁️ ' + headerStart + 'Задача №' + b.id + ' требует преревью' + headerEnd;
                 if (project.prereviewers != null)
                     for (let id of project.prereviewers)
                         notify += UserLink(id);
+            }
+            if (st == config.op_status_done)
+            {
+                header = '✅ ' + headerStart + 'Задача №' + b.id + ' завершена' + headerEnd;
             }
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
             let content = {};
