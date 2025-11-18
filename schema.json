@@ -1,0 +1,122 @@
+{
+    "type": "object",
+    "required": [
+        "port", "op_host", "git_host"
+    ],
+    "additionalProperties" : {
+        "type" : "string"
+    },
+    "properties": {
+        "port": {
+            "type": "number"
+        },
+        "op_host": {
+            "type": "string"
+        },
+        "op_auth": {
+            "type": "object",
+            "required": [ "username", "password" ],
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "rules" : {
+            "type" : "array",
+            "items" : {
+                "type": "object",
+                "headerTemplate": "{{ self.name }}",
+                "properties" : {
+                    "to_status" : { "type" : "number" }
+                }
+            }
+        },
+        "op_status_closed": {
+            "type": "number"
+        },
+        "op_status_need_testing": {
+            "type": "number"
+        },
+        "op_status_need_review": {
+            "type": "number"
+        },
+        "op_status_done": {
+            "type": "number"
+        },
+        "git_host": {
+            "type": "string"
+        },
+        "users": {
+            "type": "object",
+            "required": [],
+            "title" : "Users",
+            "description" : "Users dictionary",
+            "properties": {
+                "additionalProperties": {
+                    "type": [ "object", "string"],
+                    "title": "User ids in messengers",
+                    "required": [],
+                    "properties": {
+                        "discord": {
+                            "type": [ "number"]
+                        },
+                        "telegram": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+        "users_comment": {
+            "type": "string"
+        },
+        "projects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "headerTemplate": "{{ self.name }}",
+                "required": ["name", "op_id"],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "op_id": {
+                        "type": "number"
+                    },
+                    "gitlab_id":{
+                        "type": "number"
+                    },
+                    "webhook": {
+                        "type": "string"
+                    },
+                    "testers": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "reviewers": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "prereviewers": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        },
+        "admin_key": {
+            "type": "string"
+        }
+    }
+}

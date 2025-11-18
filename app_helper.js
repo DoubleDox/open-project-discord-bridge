@@ -1,16 +1,13 @@
-var fs = require('fs');
+import fs from 'fs';
+import bodyParser from 'body-parser';
+import express from 'express';
 
-class App 
+export class App 
 {
     constructor(config)
     {
-        this.express = require('express');
-        this.server = this.express();
+        this.server = express();
         
-        let cors = config.cors ? require('cors') : null;
-        let bodyParser = require("body-parser");
-        if (cors != null)
-            this.server.use(cors({origin: '*'}));
         this.server.use(bodyParser.urlencoded({ extended: false }));
         this.server.use(bodyParser.json());
         this.config = config;
@@ -21,8 +18,16 @@ class App
             res.send(this.version);
         });
 
-        if (fs.existsSync(__dirname + '/version.txt'))
-            this.version = fs.readFileSync(__dirname + '/version.txt').toString();
+        this.version = JSON.parse(fs.readFileSync(process.cwd() + '/package.json', 'utf8')).version;
+
+        this.LazyInit();
+    }
+
+    async LazyInit()
+    {
+        let cors = this.config.cors ? await import('cors') : null;
+        if (cors != null)
+            this.server.use(cors({ origin: '*' }));
     }
 
     AuthRequired(res)
@@ -40,4 +45,4 @@ class App
     }
 }
 
-exports.App = App;
+export default App;

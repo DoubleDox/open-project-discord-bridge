@@ -1,5 +1,4 @@
-const version = '0.3.4';
-const axios = require('axios');
+import axios from 'axios';
 
 //subject
 //description { format, raw, html }
@@ -48,8 +47,7 @@ async function logicInit(config)
     }
 }
 
-exports.Init = (app) =>
-{
+export default async (app) => {
     logicInit(app.config);
 
     var config = app.config;
@@ -133,7 +131,7 @@ exports.Init = (app) =>
 
                 try
                 {
-                    let resp = await axios.get(config.op_host + '/api/v3/work_packages/' + b.id + '/activities', { auth : config.op_auth });
+                    let resp = await get(config.op_host + '/api/v3/work_packages/' + b.id + '/activities', { auth : config.op_auth });
                     let list = resp.data?._embedded?.elements;
                     let hasRequest = false;
                     if (list != null && config.git_host != null)
@@ -195,18 +193,14 @@ exports.Init = (app) =>
                 content.content = str;
                 content.embeds = [ message ];
             }
-            await axios.post(project.webhook, content);
+            await post(project.webhook, content);
         }
 
         res.status(200).send('ok');
     });
 
-    if (config.admin_key != null)
-    {
-        app.server.get('/ophook_admin_' + config.admin_key, async (req, res) => 
-        {
-            let f = require('fs').readFileSync('./admin.html', 'utf8');
-            res.send(f);
-        });
-    }
+    /*const fs = require('fs');
+    const ejs = require('easy-json-schema');
+    const jsonSchema = ejs(app.config);
+    fs.writeFileSync(process.cwd() + '/schema.json', JSON.stringify(jsonSchema));*/
 }

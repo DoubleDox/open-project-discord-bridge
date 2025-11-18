@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html>
+
+<body>
+    <style>
+        /* JSON Editor Custom Styles */
+.json-editor-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.json-editor-container .well {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.json-editor-container .well-sm {
+  padding: 8px 12px;
+}
+
+.json-editor-container .form-control {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.json-editor-container .form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.json-editor-container .btn {
+  background: #f8fafc;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.json-editor-container .btn:hover {
+  background: #e5e7eb;
+}
+
+.json-editor-container .btn-primary {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.json-editor-container .btn-primary:hover {
+  background: #2563eb;
+}
+
+.json-editor-container .btn-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: white;
+}
+
+.json-editor-container .btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Стили для заголовков */
+.json-editor-container .property-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.json-editor-container .property-description {
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Стили для массива */
+.json-editor-container .json-editor-btn-array {
+  margin-top: 8px;
+}
+
+/* Стили для вложенных объектов */
+.json-editor-container .children-right {
+  margin-left: 20px;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 16px;
+}
+
+/* Стили для выбора типа */
+.json-editor-container select {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+body{
+    display: flex;
+    justify-content: center; /* Горизонтальное выравнивание */
+}
+
+#editor_holder
+{
+    min-width: 480px;
+}
+
+[data-schemapath="root.projects"]
+{
+    background-color: rgb(217, 240, 255);
+}
+
+[data-schemapath="root.users"]
+{
+    background-color: rgb(255, 254, 217);
+}
+
+.required{
+    background-color: rgb(255, 220, 220);
+}
+
+input[type=text]
+{
+    width : 100%
+}
+
+</style>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+    <!--INITIAL-DATA!-->
+    <div id="editor_holder" class="json-editor-container"></div>
+    <script defer>
+    const element = document.getElementById('editor_holder');
+        console.log(element);
+    const editor = new JSONEditor(element, { schema : schema, startval: data, custom_css : 'json-editor-custom' });
+    </script>
+</body>
+
+</html>
