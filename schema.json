@@ -40,15 +40,6 @@
         "op_status_closed": {
             "type": "number"
         },
-        "op_status_need_testing": {
-            "type": "number"
-        },
-        "op_status_need_review": {
-            "type": "number"
-        },
-        "op_status_done": {
-            "type": "number"
-        },
         "git_host": {
             "type": "string"
         },
@@ -64,7 +55,7 @@
                     "required": [],
                     "properties": {
                         "discord": {
-                            "type": [ "number"]
+                            "type": "string"
                         },
                         "telegram": {
                             "type": "string"
@@ -73,9 +64,6 @@
                     "additionalProperties": false
                 }
             }
-        },
-        "users_comment": {
-            "type": "string"
         },
         "projects": {
             "type": "array",
