@@ -1,7 +1,7 @@
 {
     "type": "object",
     "required": [
-        "port", "op_host", "git_host"
+        "port", "op_host", "op_auth"
     ],
     "additionalProperties" : {
         "type" : "string"
@@ -29,9 +29,11 @@
             "type" : "array",
             "items" : {
                 "type": "object",
-                "headerTemplate": "{{ self.name }}",
+                "headerTemplate": "{{ self.status }}",
                 "properties" : {
-                    "to_status" : { "type" : "number" }
+                    "status_from" : { "type" : "number" },
+                    "status" : { "type" : "number|object" },
+                    "template" : {"type" : "string" }
                 }
             }
         },

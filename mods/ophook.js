@@ -17,12 +17,12 @@ async function logicInit(config)
 {
     for (let project of config.projects)
     {
-        let proj = project.op_id;
-        if (proj == null) continue;
+        const proj = project.op_id;
+        if (!proj) continue;
         try
         {
-            let res = await axios.get(config.op_host + '/api/v3/projects/' + proj + '/work_packages?filters=[{"status":{"operator":"o"}}]&pageSize=500', { auth: config.op_auth });
-            let list = res.data._embedded?.elements;
+            const res = await axios.get(config.op_host + '/api/v3/projects/' + proj + '/work_packages?filters=[{"status":{"operator":"o"}}]&pageSize=500', { auth: config.op_auth });
+            const list = res.data._embedded?.elements;
             if (list != null)
             {
                 for (let wp of list)
@@ -31,7 +31,7 @@ async function logicInit(config)
                     let st = status.href;
                     if (st.indexOf('/') >= 0)
                         st = parseInt(st.substr(st.lastIndexOf('/') + 1));
-                    let assignee = wp._links?.assignee;
+                    const assignee = wp._links?.assignee;
                     let ass = assignee?.href;
                     if (ass != null && ass.indexOf('/') >= 0)
                         ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
@@ -56,61 +56,60 @@ export default async (app) => {
     {
         let b = req.body.work_package;
         if (b == null) { res.send(''); return; }
-        // b.action = work_package:updated'
-        //console.log(b);
-        //console.log(b.watchers);
-        let p_id = req.body.work_package._embedded.project.id;
-        let project = config.projects.find(p => p.op_id == p_id);
-        if (project == null) 
+        
+        const p_id = req.body.work_package._embedded.project.id;
+        const project = config.projects.find(p => p.op_id == p_id);
+        if (!project) 
         {
             console.log('Project with id ' + p_id + " not configured");
             return;
         }
 
-        let target = null;
-        if (project.webhook.indexOf('discord') >= 0) target = 'discord';
-        if (project.webhook.indexOf('telegram') >= 0) target = 'telegram';
-        let status = b._links?.status?.title;
-        console.log('Received ' + req.body.action + ' for ' + b.id + ' status: ' + status);
-        let st = b._links?.status?.href;
-        if (st.indexOf('/') >= 0)
-            st = parseInt(st.substr(st.lastIndexOf('/') + 1));
+        let target = project.target;
+        if (!target)
+        {
+            for (let mes of Object.keys(app.messengers))
+                if (project.webhook.indexOf(mes) >= 0) {
+                    target = mes;
+                    break;
+                }
+        }
+        const status_title = b._links?.status?.title;
+        console.log('Received ' + req.body.action + ' for ' + b.id + ' status: ' + status_title);
+        
+        let status = b._links?.status?.href;
+        if (status.indexOf('/') >= 0)
+            status = parseInt(status.substr(status.lastIndexOf('/') + 1));
+        const closed = status == config.op_status_closed;
 
-        let closed = st == config.op_status_closed;
-            
-        let assignee = b._links?.assignee?.title;
+        const assignee = b._links?.assignee?.title;
         let ass = b._links?.assignee?.href;
         if (ass != null && ass.indexOf('/') >= 0)
             ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
 
         function UserLink(u) {
-            if (config.users[u])
+            if (config.users[u] && app.messengers[target])
             {
-                if (typeof (config.users[u]) == 'string')
-                    return (target == 'discord' ? '<' : '') + '@' + config.users[u] + (target == 'discord' ? '>' : '');
-                if (target && config.users[u][target])
-                    return (target == 'discord' ? '<' : '') + '@' + config.users[u][target] + (target == 'discord' ? '>' : '');
+                return app.messengers[target].userLink(config.users[u]);
             }
             return 'OP_USER_' + u;
         }
 
-        const headerStart = target == 'discord' ? '**' : '<b>';
-        const headerEnd = target == 'discord' ? '**' : '</b>';
-
         let fields = [];
         let notify = '';
-        if (cache[b.id] == null) cache[b.id] = {};
-        if (cache[b.id] != null && cache[b.id].status != st)
+        if (!cache[b.id]) cache[b.id] = {};
+        const status_prev = cache[b.id]?.status;
+        if (status != status_prev)
         {
-            console.log('Status update from ' + cache[b.id].status_title + ' to ' + status);
-            fields.push( { name : 'Status', value : cache[b.id].status_title + ' -> ' + status });
-            cache[b.id].status = st;
-            cache[b.id].status_title = status;
+            console.log('Status update from ' + cache[b.id].status_title + ' to ' + status_title);
+            fields.push( { name : 'Status', value : cache[b.id].status_title + ' -> ' + status_title });
+            cache[b.id].status = status;
+            cache[b.id].status_title = status_title;
         }
-        if (cache[b.id] != null && cache[b.id].assignee != ass)
+        if (ass != cache[b.id]?.assignee)
         {
-            console.log('Assignee update from ' + (cache[b.id].assignee_title??'none') + ' to ' + assignee);
-            fields.push( { name : 'Assignee', value : (cache[b.id].assignee_title??'none') + ' -> ' + assignee });
+            console.log('Assignee update from ' + (cache[b.id]?.assignee_title??'none') + ' to ' + assignee);
+            fields.push( { name : 'Assignee', value : (cache[b.id]?.assignee_title??'none') + ' -> ' + assignee });
             cache[b.id].assignee = ass;
             cache[b.id].assignee_title = assignee;
             if (config.users[ass] && !closed)
@@ -122,78 +121,71 @@ export default async (app) => {
         if (fields.length > 0)
         {
             let created = req.body.action == 'work_package:created';
-            let message = { username :  'OP Bot', color: HEXToVBColor(b._embedded?.status?.color) }; // title = ''
+            const message = { username :  'OP Bot', color: HEXToVBColor(b._embedded?.status?.color) }; // title = ''
             message.fields = fields;
-            let header = '✨ ' + headerStart + 'Обновление задачи №' + b.id + headerEnd;
-            if (st == config.op_status_need_testing)
-            {
-                header = '🧪 ' + headerStart + 'Задача №' + b.id + ' готова к тестированию' + headerEnd;
+            let header = '';
 
-                try
+            for (let rule of config.rules)
+            {
+                if (Array.isArray(rule.status) && rule.status.indexOf(status) >= 0 || rule.status == status)
                 {
-                    let resp = await get(config.op_host + '/api/v3/work_packages/' + b.id + '/activities', { auth : config.op_auth });
-                    let list = resp.data?._embedded?.elements;
-                    let hasRequest = false;
-                    if (list != null && config.git_host != null)
-                    {
-                        for (let el of list)
-                        {
-                            if (el._type == 'Activity::Comment' && el.comment != null)
-                            {
-                                if (el.comment.raw.indexOf(config.git_host) >= 0)
-                                    hasRequest = true;
+                    if (!rule.status_from || rule.status_from == status_prev || Array.isArray(rule.status_from) && rule.status_from.indexOf(status_prev) >= 0) {
+                        header += rule.template.replace('{task.id}', b.id); // TODO: process markup by messenger module
+
+                        if (rule.action == 'check_request_attached' && config.git_host) {
+                            if (config.git_host) {
+                                try {
+                                    let resp = await axios.get(config.op_host + '/api/v3/work_packages/' + b.id + '/activities', { auth: config.op_auth });
+                                    let list = resp.data?._embedded?.elements;
+                                    let mergeRequest = false;
+                                    if (list != null && config.git_host != null) {
+                                        for (let el of list) {
+                                            if (el._type == 'Activity::Comment' && el.comment != null) {
+                                                if (el.comment.raw.indexOf(config.git_host) >= 0)
+                                                    mergeRequest = el.comment.raw.trim();
+                                            }
+                                        }
+                                    }
+                                    console.log(mergeRequest);
+                                    if (!mergeRequest)
+                                        header += config.actions?.check_request_attached?.message ?? ' ⚠️ No request specified ⚠️';
+                                    else {
+                                        const resp = await axios.get(config.git_host + '/api/v4/projects/' + project.git_id + '/merge_requests/1/changes', { headers: { 'PRIVATE-TOKEN': 'xzVt4EP_4quzfwUjgW_Q' } });
+                                        console.log(resp);
+                                        
+                                        //resp.data.diff_refs.head_sha - last commit in branch
+                                        //resp.data.diff_refs.base_sha   |
+                                        //resp.data.diff_refs.start_sha  |- base commit in develop to compared with?
+                                        //resp.data.changes = []
+                                        //-- old_path, new_path
+                                    }
+                                }
+                                catch (exc) {
+                                    console.error('Cannot fetch comments of ' + b.id + ': ' + exc);
+                                }
+                            }
+                            else
+                                console.error('git host not setup for action ' + rule.action);
+                        }
+
+                        if (project.tag_by_status && project.tag_by_status[status]) {
+                            for (let u of project.tag_by_status[status]) {
+                                notify += UserLink(u);
                             }
                         }
                     }
-                
-                    if (!hasRequest)
-                        header += ' ⚠️ Отсутствует реквест ⚠️';
                 }
-                catch (exc)
-                {
-                    console.error('Cannot fetch comments of ' + b.id + ': ' + exc);
-                }
+            }
 
-                if (project.testers != null)
-                    for (let id of project.testers)
-                        notify += UserLink(id);
-            }
-            if (st == config.op_status_need_review)
+            if (!header)
             {
-                header = '🔍 ' + headerStart + 'Задача №' + b.id + ' готова к ревью' + headerEnd;
-                if (project.reviewers != null)    
-                    for (let id of project.reviewers)
-                        notify += UserLink(id);
+                header = config.rules.find(r => !r.status).template.replace('{task.id}', b.id);
             }
-            if (st == config.op_status_need_prereview)
-            {
-                header = '👁️ ' + headerStart + 'Задача №' + b.id + ' требует преревью' + headerEnd;
-                if (project.prereviewers != null)
-                    for (let id of project.prereviewers)
-                        notify += UserLink(id);
-            }
-            if (st == config.op_status_done)
-            {
-                header = '✅ ' + headerStart + 'Задача №' + b.id + ' завершена' + headerEnd;
-            }
+            
             let link = config.op_host + '/work_packages/' + b.id + '/activity'
-            let content = {};
-            if (target == 'telegram')
-                content.parse_mode = 'html';
             let str = header + '\n' + b.subject + '\n' + link + ' ' + notify;
-            if (project.chat_id)
-            {
-                content.chat_id = project.chat_id;
-                content.text = str;
-                if (project.topic)
-                    content.reply_to_message_id = project.topic
-            }
-            else
-            {
-                content.content = str;
-                content.embeds = [ message ];
-            }
-            await post(project.webhook, content);
+            const content = app.messengers[target].prepareMessage(project, str);
+            await axios.post(project.webhook, content);
         }
 
         res.status(200).send('ok');

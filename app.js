@@ -1,5 +1,6 @@
 import { App } from './app_helper.js';
 import { readFileSync } from 'fs';
+import fs from 'fs';
 const config = JSON.parse(readFileSync(process.cwd() + '/config.json', 'utf8'));
 const app = new App(config);
 import ophook from './mods/ophook.js';
@@ -14,6 +15,13 @@ if (config.admin_key) {
         admin(app);
     else
         console.error('Plugin admin doesn`t export function');
+}
+
+app.messengers = {};
+for (let mes of fs.readdirSync('./messengers'))
+{
+    const m = await import('./messengers/' + mes);
+    app.messengers[mes.split('.')[0]] = m;
 }
 
 app.Start();

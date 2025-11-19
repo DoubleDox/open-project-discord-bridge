@@ -30,11 +30,6 @@ export class App
             this.server.use(cors({ origin: '*' }));
     }
 
-    AuthRequired(res)
-    {
-        res.status(403).send("{ statusCode : -1, errorMessage : 'AuthRequired'}");
-    }
-
     Start()
     {
         let port = this.config.port ?? 8080;
