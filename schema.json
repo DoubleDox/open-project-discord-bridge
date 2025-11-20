@@ -25,14 +25,50 @@
                 }
             }
         },
+        "projects": {
+            "type": "array",
+            "format": "tabs-top",
+            "items": {
+                "type": "object",
+                "headerTemplate": "{{ self.name }}",
+                "required": [
+                    "name",
+                    "op_id"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "op_id": {
+                        "type": "number"
+                    },
+                    "git_id": {
+                        "type": "number"
+                    },
+                    "webhook": {
+                        "type": "string"
+                    },
+                    "tag_by_status":
+                    {
+                        "type" : "object",
+                        "additionalProperties": { "type" : "array", "items" : { "type" : "number"} }
+                    }
+                },
+                "options" : { "containerAttributes" : { "data-container": "project" }}
+            }
+        },
         "rules" : {
             "type" : "array",
+            "format": "table",
             "items" : {
                 "type": "object",
-                "headerTemplate": "{{ self.status }}",
+                "headerTemplate": "{{status}}",
+                "watch" : {
+                    "status" : "status"
+                },
                 "properties" : {
                     "status_from" : { "type" : "number" },
-                    "status" : { "type" : "number|object" },
+                    "status" : { "type" : [ "number", "array" ], "items" : { "type" : "number" } },
                     "template" : {"type" : "string" }
                 }
             }
@@ -45,63 +81,18 @@
         },
         "users": {
             "type": "object",
+            "format":"table",
             "required": [],
             "title" : "Users",
             "description" : "Users dictionary",
-            "properties": {
+            "additionalProperties": {
+                "type": [
+                    "object",
+                    "string"
+                ],
+                "required": [],
                 "additionalProperties": {
-                    "type": [ "object", "string"],
-                    "title": "User ids in messengers",
-                    "required": [],
-                    "properties": {
-                        "discord": {
-                            "type": "string"
-                        },
-                        "telegram": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
-                }
-            }
-        },
-        "projects": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "headerTemplate": "{{ self.name }}",
-                "required": ["name", "op_id"],
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "op_id": {
-                        "type": "number"
-                    },
-                    "gitlab_id":{
-                        "type": "number"
-                    },
-                    "webhook": {
-                        "type": "string"
-                    },
-                    "testers": {
-                        "type": "array",
-                        "items": {
-                            "type": "number"
-                        }
-                    },
-                    "reviewers": {
-                        "type": "array",
-                        "items": {
-                            "type": "number"
-                        }
-                    },
-                    "prereviewers": {
-                        "type": "array",
-                        "items": {
-                            "type": "number"
-                        }
-                    }
+                    "type" : "string"
                 }
             }
         },
