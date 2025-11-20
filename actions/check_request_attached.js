@@ -58,7 +58,7 @@ const validateFiles = (files) => {
 
     if (!filter)
     {
-        filter = JSON.parse(fs.readFileSync('./unity-rules.json', 'utf8'));
+        filter = fs.existsSync('./unity-rules.json') ? JSON.parse(fs.readFileSync('./unity-rules.json', 'utf8')) : [];
     }
 
     for (const file of files) {
