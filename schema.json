@@ -67,7 +67,7 @@
                     "status" : "status"
                 },
                 "properties" : {
-                    "status_from" : { "type" : "number" },
+                    "status_from" : { "type" : [ "number", "array" ], "items" : { "type" : "number" } },
                     "status" : { "type" : [ "number", "array" ], "items" : { "type" : "number" } },
                     "template" : {"type" : "string" }
                 }
@@ -98,6 +98,9 @@
         },
         "admin_key": {
             "type": "string"
+        },
+        "actions" : {
+            "type" : "object"
         }
     }
 }
