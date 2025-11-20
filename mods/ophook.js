@@ -1,49 +1,49 @@
 import axios from 'axios';
+import op from '../api/open-project.js';
 
 //subject
 //description { format, raw, html }
 //watchers
 //assignee
 
-function HEXToVBColor(rrggbb, start) {
-    let st = start ?? 0;
-    var bbggrr = rrggbb.substr(4 + st, 2) + rrggbb.substr(2 + st, 2) + rrggbb.substr(st, 2);
-    return parseInt(bbggrr, 16);
-}
-
-var cache = {};
+const cache = {};
+/**
+ * Dictionary<id,{name,#color,isClosed,position}>
+ */
+const statuses = {};
 
 async function logicInit(config)
 {
-    for (let project of config.projects)
-    {
+    const list = await op.getStatuses(config);
+
+    if (Array.isArray(list)) {
+        for (let st of list) {
+            statuses[st.id] = st;
+        }
+    }
+    else if (list.error)
+        console.error(list.error);
+
+    for (let project of config.projects) {
         const proj = project.op_id;
         if (!proj) continue;
-        try
-        {
-            const res = await axios.get(config.op_host + '/api/v3/projects/' + proj + '/work_packages?filters=[{"status":{"operator":"o"}}]&pageSize=500', { auth: config.op_auth });
-            const list = res.data._embedded?.elements;
-            if (list != null)
-            {
-                for (let wp of list)
-                {
-                    let status = wp._links?.status;
-                    let st = status.href;
-                    if (st.indexOf('/') >= 0)
-                        st = parseInt(st.substr(st.lastIndexOf('/') + 1));
-                    const assignee = wp._links?.assignee;
-                    let ass = assignee?.href;
-                    if (ass != null && ass.indexOf('/') >= 0)
-                        ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
-                    cache[wp.id] = { status : st, status_title : status.title, assignee : ass, assignee_title : assignee?.title };
-                }
-                console.log('Loaded to cache ' + list.length + ' work packages of project ' + proj);
+        const list = await op.getTasks(config, proj)
+        if (Array.isArray(list)) {
+            for (let wp of list) {
+                let status = wp._links?.status;
+                let st = status.href;
+                if (st.indexOf('/') >= 0)
+                    st = parseInt(st.substr(st.lastIndexOf('/') + 1));
+                const assignee = wp._links?.assignee;
+                let ass = assignee?.href;
+                if (ass != null && ass.indexOf('/') >= 0)
+                    ass = parseInt(ass.substr(ass.lastIndexOf('/') + 1));
+                cache[wp.id] = { status: st, status_title: status.title, assignee: ass, assignee_title: assignee?.title, project: proj };
             }
+            console.log('Loaded to cache ' + list.length + ' work packages of project ' + proj);
         }
-        catch(exc)
-        {
-            console.log(exc.response?.data ?? exc);
-        }
+        else
+            console.log('Cannot read work packages of project ' + proj);   
     }
 }
 
@@ -95,7 +95,7 @@ export default async (app) => {
             return 'OP_USER_' + u;
         }
 
-        let fields = [];
+        const fields = [];
         let notify = '';
         if (!cache[b.id]) cache[b.id] = {};
         const status_prev = cache[b.id]?.status;
@@ -120,11 +120,7 @@ export default async (app) => {
 
         if (fields.length > 0)
         {
-            let created = req.body.action == 'work_package:created';
-            const message = { username :  'OP Bot', color: HEXToVBColor(b._embedded?.status?.color) }; // title = ''
-            message.fields = fields;
             let header = '';
-
             for (let rule of config.rules)
             {
                 if (Array.isArray(rule.status) && rule.status.indexOf(status) >= 0 || rule.status == status)
@@ -132,42 +128,17 @@ export default async (app) => {
                     if (!rule.status_from || rule.status_from == status_prev || Array.isArray(rule.status_from) && rule.status_from.indexOf(status_prev) >= 0) {
                         header += rule.template.replace('{task.id}', b.id); // TODO: process markup by messenger module
 
-                        if (rule.action == 'check_request_attached' && config.git_host) {
-                            if (config.git_host) {
-                                try {
-                                    let resp = await axios.get(config.op_host + '/api/v3/work_packages/' + b.id + '/activities', { auth: config.op_auth });
-                                    let list = resp.data?._embedded?.elements;
-                                    let mergeRequest = false;
-                                    if (list != null && config.git_host != null) {
-                                        for (let el of list) {
-                                            if (el._type == 'Activity::Comment' && el.comment != null) {
-                                                if (el.comment.raw.indexOf(config.git_host) >= 0)
-                                                    mergeRequest = el.comment.raw.trim();
-                                            }
-                                        }
-                                    }
-                                    console.log(mergeRequest);
-                                    if (!mergeRequest)
-                                        header += config.actions?.check_request_attached?.message ?? ' ⚠️ No request specified ⚠️';
-                                    else {
-                                        const resp = await axios.get(config.git_host + '/api/v4/projects/' + project.git_id + '/merge_requests/1/changes', { headers: { 'PRIVATE-TOKEN': 'xzVt4EP_4quzfwUjgW_Q' } });
-                                        console.log(resp);
-                                        
-                                        //resp.data.diff_refs.head_sha - last commit in branch
-                                        //resp.data.diff_refs.base_sha   |
-                                        //resp.data.diff_refs.start_sha  |- base commit in develop to compared with?
-                                        //resp.data.changes = []
-                                        //-- old_path, new_path
-                                    }
-                                }
-                                catch (exc) {
-                                    console.error('Cannot fetch comments of ' + b.id + ': ' + exc);
-                                }
+                        if (rule.action)
+                        {
+                            const aa = app.actions[rule.action];
+                            if (aa) {
+                                const answer = aa(config, { task_id: b.id, project : project });
+                                if (answer.message)
+                                    header += answer.message;
+                                if (answer.error)
+                                    console.error('Action ' + rule.action + ' error: ' + answer.error);
                             }
-                            else
-                                console.error('git host not setup for action ' + rule.action);
                         }
-
                         if (project.tag_by_status && project.tag_by_status[status]) {
                             for (let u of project.tag_by_status[status]) {
                                 notify += UserLink(u);

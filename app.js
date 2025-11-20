@@ -20,8 +20,22 @@ if (config.admin_key) {
 app.messengers = {};
 for (let mes of fs.readdirSync('./messengers'))
 {
-    const m = await import('./messengers/' + mes);
-    app.messengers[mes.split('.')[0]] = m;
+    if (mes.substring(mes.lastIndexOf('.') + 1) == 'js') {
+        const m = await import('./messengers/' + mes);
+        const n = mes.split('.')[0];
+        app.messengers[n] = m;
+        console.log('messenger ' + n + ' loaded');
+    }
+}
+
+app.actions = {};
+for (let act of fs.readdirSync('./actions')) {
+    if (act.substring(act.lastIndexOf('.') + 1) == 'js') {
+        const a = await import('./actions/' + act);
+        const n = act.split('.')[0];
+        app.actions[n] = a;
+        console.log('action ' + n + ' loaded');
+    }
 }
 
 app.Start();
