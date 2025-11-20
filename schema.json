@@ -67,8 +67,8 @@
                     "status" : "status"
                 },
                 "properties" : {
-                    "status_from" : { "type" : [ "number", "array" ], "items" : { "type" : "number" } },
-                    "status" : { "type" : [ "number", "array" ], "items" : { "type" : "number" } },
+                    "status_from" : { "type" : [ "number", "array" ], "items" : { "type" : "number" }, "format" : "table" },
+                    "status" : { "type" : [ "number", "array" ], "items" : { "type" : "number" }, "options" : {"disable_array_reorder" : true, "input_width" : "128px"}, "format" : "table" },
                     "template" : {"type" : "string" }
                 }
             }

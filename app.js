@@ -31,11 +31,21 @@ for (let mes of fs.readdirSync('./messengers'))
 app.actions = {};
 for (let act of fs.readdirSync('./actions')) {
     if (act.substring(act.lastIndexOf('.') + 1) == 'js') {
-        const a = await import('./actions/' + act);
+        const a = (await import('./actions/' + act)).default;
         const n = act.split('.')[0];
         app.actions[n] = a;
         console.log('action ' + n + ' loaded');
     }
 }
+
+import op from './api/open-project.js'
+(async () => {
+    let list = await op.getTasks(config, 30, [{ "status": { "operator": "c" } }]);
+    for (let o of list) {
+        const actres = await app.actions['check_request_attached'].default(config, { task_id: o.id, project: { git_id: 91 } });
+        console.log(o.id + " " + JSON.stringify(actres));
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+})();
 
 app.Start();
