@@ -1,5 +1,4 @@
 import axios from 'axios';
-import picomatch from 'picomatch';
 import fs from 'fs';
 import path from 'path';
 import op from '../api/open-project.js';
@@ -30,7 +29,7 @@ export default async function doAction(config, context)
                     //resp.data.changes = []
                     //-- old_path, new_path
                     if (resp.data.changes) {
-                        const result = validateFiles(resp.data.changes.map(m => m.new_path));
+                        const result = await validateFiles(resp.data.changes.map(m => m.new_path));
                         if (!result) {
                             console.error('There are problems in mr ' + request_id);
                         }
@@ -52,8 +51,9 @@ export default async function doAction(config, context)
 }
 
 let filter = null;
+let picomatch = null;
 
-const validateFiles = (files) => {
+const validateFiles = async (files) => {
     let hasErrors = false;
 
     if (!filter)
@@ -65,6 +65,8 @@ const validateFiles = (files) => {
         const posixFile = file.split(path.sep).join(path.posix.sep); 
         let isMatchAny = false;
         for (const rule of filter.rules) {
+            if (picomatch == null)
+                picomatch = (await import('picomatch')).default;
             const isMatch = rule.pattern && picomatch(rule.pattern)(posixFile);
 
             if (isMatch) {
