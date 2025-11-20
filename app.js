@@ -38,14 +38,4 @@ for (let act of fs.readdirSync('./actions')) {
     }
 }
 
-import op from './api/open-project.js'
-(async () => {
-    let list = await op.getTasks(config, 30, [{ "status": { "operator": "c" } }]);
-    for (let o of list) {
-        const actres = await app.actions['check_request_attached'].default(config, { task_id: o.id, project: { git_id: 91 } });
-        console.log(o.id + " " + JSON.stringify(actres));
-        await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-})();
-
 app.Start();
