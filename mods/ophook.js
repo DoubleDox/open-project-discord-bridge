@@ -141,7 +141,7 @@ export default async (app) => {
                         }
                         if (project.tag_by_status && project.tag_by_status[status]) {
                             for (let u of project.tag_by_status[status]) {
-                                notify += UserLink(u);
+                                notify += UserLink(u) + ' ';
                             }
                         }
                     }
