@@ -131,7 +131,8 @@ input[type=text]
     <button id="save-button">Save</button>
     <script defer>
     const element = document.getElementById('editor-holder');
-    const editor = new JSONEditor(element, { schema : schema, startval: data });
+    JSONEditor.defaults.options.disable_array_delete_last_row = true;
+    const editor = new JSONEditor(element, { schema : schema, startval: data, options : { disable_array_delete_all_rows : true } });
     document.querySelector('#save-button').addEventListener('click', async (e) => { 
         console.log(editor.getValue());
         const result = await fetch('ophook_admin', { method : 'POST', headers : { 'content-type' : 'application/json'}, body : JSON.stringify(editor.getValue()) }).then(d => d.text());
