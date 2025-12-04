@@ -132,7 +132,7 @@ export default async (app) => {
                         {
                             const aa = app.actions[rule.action];
                             if (aa) {
-                                const answer = aa(config, { task_id: b.id, project : project });
+                                const answer = await aa(config, { task_id: b.id, project : project });
                                 if (answer.message)
                                     header += answer.message;
                                 if (answer.error)
